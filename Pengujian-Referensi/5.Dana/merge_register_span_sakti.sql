@@ -12,6 +12,8 @@ FROM
     CASE
       WHEN CLOSING_DATE >= SYSDATE
       THEN 0
+      WHEN CLOSING_DATE IS NULL
+      THEN 0
       ELSE 1
     END AS enabled_flag,
     nama_loan_grant description,
@@ -20,21 +22,21 @@ FROM
     nilai_phln,
     tgl_nphln,
     nod_currency
-  FROM apps.sppm_register_lender@SPAN_ST 
+  FROM apps.sppm_register_lender@SPAN_ST
   ) ffv
 FULL OUTER JOIN sakti_ut.ADM_R_REGISTER arb
 ON arb.kode              =ffv.flex_value
 ) src ON (src.flex_value = arb.kode)
 WHEN matched THEN
   UPDATE
-  SET arb.deskripsi      =src.description,
-    arb.deleted          =src.enabled_flag,
-    arb.nama_donor       =src.lender_name,
-    arb.no_pln           = nvl(src.no_nphln,arb.no_pln),
-    arb.pagu             =src.nilai_phln,
-    arb.tgl_pln          =src.tgl_npln,
-    arb.kode_mata_uang   =src.nod_currency,
-    arb.modified_date    = sysdate WHEN NOT matched THEN
+  SET arb.deskripsi    =src.description,
+    arb.deleted        =src.enabled_flag,
+    arb.nama_donor     =src.lender_name,
+    arb.no_pln         = NVL(src.no_nphln,arb.no_pln),
+    arb.pagu           =src.nilai_phln,
+    arb.tgl_pln        =src.tgl_npln,
+    arb.kode_mata_uang =src.nod_currency,
+    arb.modified_date  = sysdate WHEN NOT matched THEN
   INSERT
     (
       kode,
@@ -58,10 +60,10 @@ WHEN matched THEN
       sysdate,
       0,
       src.lender_name,
-      nvl(src.no_nphln,'ZZZ'),
+      NVL(src.no_nphln,'ZZZ'),
       src.nilai_phln,
       src.tgl_npln,
       src.nod_currency
-    ); 
+    );
     
-    commit;
+  COMMIT;
