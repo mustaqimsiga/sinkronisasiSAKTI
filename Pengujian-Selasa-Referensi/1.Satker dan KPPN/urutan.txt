@@ -1,0 +1,7 @@
+urutan:
+1. merge kementerian
+2. merge eselon
+3. merge kanwil
+4. merge kppn
+5. merge jenis satker
+6. merge satker

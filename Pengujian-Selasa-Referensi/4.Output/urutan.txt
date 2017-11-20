@@ -1,0 +1,8 @@
+merge_fungsi_span_sakti.sql
+merge_subfungsi_span_sakti.sql
+merge_kegiatan_span_sakti.sql
+merge_output_span_sakti.sql
+
+Warning!!! merge kegiatan:
+SPAN 1 kegiatan, F-SF > 1 (F-SF melekat di output)
+SAKTI 1 kegiatan 1 F-SF (F-SF melekat di kegiatan)

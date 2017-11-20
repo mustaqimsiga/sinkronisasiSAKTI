@@ -1,0 +1,7 @@
+merge_tipe_akun_span_sakti.sql
+merge_akun1_span_sakti.sql
+merge_akun2_span_sakti.sql
+merge_akun3_span_sakti.sql
+merge_akun4_span_sakti.sql
+merge_akun5_span_sakti.sql
+merge_akun6_span_sakti.sql
