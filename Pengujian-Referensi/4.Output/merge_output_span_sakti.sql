@@ -1,3 +1,6 @@
+-- FILE: merge_output_span_sakti.sql
+-- PURPOSE: merge SPAN CVR002 ke SAKTI ADM_R_OUTPUT
+
 merge INTO ADM_R_OUTPUT arb USING
 (SELECT NVL(ffv.flex_value,arb.KODE)flex_value ,
   nvl2(ffv.flex_value,ffv.enabled_flag,1) enabled_flag ,
