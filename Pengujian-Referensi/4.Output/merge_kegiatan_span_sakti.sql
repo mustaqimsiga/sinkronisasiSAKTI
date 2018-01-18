@@ -15,7 +15,7 @@ FROM
       || '.'
       || SUBSTR(DATA_2.attribute3,3,2) attribute3
     FROM
-      (SELECT SUBSTR(CONCATENATED_SEGMENTS_LOW,4,3)
+      (SELECT DISTINCT SUBSTR(CONCATENATED_SEGMENTS_LOW,4,3)
         || '.'
         || SUBSTR(CONCATENATED_SEGMENTS_LOW,7,2)
         || '.'
@@ -33,16 +33,36 @@ FROM
       AND SUBSTR(CONCATENATED_SEGMENTS_LOW,16,3) NOT IN ('ZZZ', '000')
       ) DATA_1
     LEFT JOIN
-      (SELECT ffv.flex_value,
-        ffv.attribute3
-      FROM fnd_flex_values@SPAN_ST ffv
-      LEFT JOIN fnd_flex_value_sets@SPAN_ST ffvs
-      ON ffv.flex_value_set_id = ffvs.flex_value_set_id
-      LEFT JOIN fnd_flex_values_tl@SPAN_ST ffvt
-      ON ffv.FLEX_VALUE_ID = ffvt.FLEX_VALUE_ID
-      WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_OUTPUT'
-      AND ffv.summary_flag          ='N'
-      AND ffvt.language             ='IN'
+      (SELECT data_1.flex_value,
+  data_2.attribute3
+FROM (
+  (SELECT ffv.flex_value,
+    attribute1
+  FROM fnd_flex_values@SPAN_ST ffv
+  LEFT JOIN fnd_flex_value_sets@SPAN_ST ffvs
+  ON ffv.flex_value_set_id = ffvs.flex_value_set_id
+  LEFT JOIN fnd_flex_values_tl@SPAN_ST ffvt
+  ON ffv.FLEX_VALUE_ID            = ffvt.FLEX_VALUE_ID
+  WHERE ffvs.FLEX_VALUE_SET_NAME  ='SPAN_OUTPUT'
+  AND SUBSTR(ffv.flex_value,5,3) != 'ZZZ'
+  AND ffv.summary_flag ='N'
+  AND ffvt.language    ='IN'
+  ) data_1
+LEFT JOIN
+  (SELECT ffv.attribute1,
+    REGEXP_SUBSTR(listagg(ffv.attribute3,',') within GROUP (
+  ORDER BY ffv.last_update_date DESC), '([0-9]+)', 1) attribute3
+  FROM fnd_flex_values@SPAN_ST ffv
+  LEFT JOIN fnd_flex_value_sets@SPAN_ST ffvs
+  ON ffv.flex_value_set_id = ffvs.flex_value_set_id
+  LEFT JOIN fnd_flex_values_tl@SPAN_ST ffvt
+  ON ffv.FLEX_VALUE_ID            = ffvt.FLEX_VALUE_ID
+  WHERE ffvs.FLEX_VALUE_SET_NAME  ='SPAN_OUTPUT'
+  AND ffv.summary_flag            ='N'
+  AND ffvt.language               ='IN'
+  AND SUBSTR(ffv.flex_value,5,3) != 'ZZZ'
+  GROUP BY ffv.attribute1
+  ) data_2 ON data_1.attribute1= data_2.attribute1 )
       ) DATA_2 ON DATA_1.OUTPUT     = DATA_2.flex_value
     WHERE DATA_2.flex_value        IS NOT NULL
     ) data_12
@@ -63,6 +83,7 @@ FROM
     AND ffv.summary_flag          ='N'
     AND ffvt.language             ='IN'
     ) DATA_3 ON DATA_12.KEGIATAN  = DATA_3.flex_value
+    WHERE DATA_3.enabled_flag = '0'
   ) ffv
 FULL OUTER JOIN ADM_R_KEGIATAN arb
 ON arb.kode              =ffv.flex_value
