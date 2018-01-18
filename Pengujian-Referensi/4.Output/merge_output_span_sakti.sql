@@ -1,85 +1,87 @@
--- FILE: merge_output_span_sakti.sql
--- PURPOSE: merge CVR002 dan OUTPUT ke ADM_R_OUTPUT
-
-MERGE INTO ADM_R_OUTPUT SAKTI USING (
--- <!-- TRANSLATE SPAN FIELD_NAMES INTO SAKTI FIELD_NAMES
-  SELECT
-    NVL2(SPAN_CVR002_OUTPUT.FLEX_VALUE,SUBSTR(SPAN_CVR002_OUTPUT.FLEX_VALUE,5,3),SAKTI_OUTPUT.KODE) KODE,
-    NVL2(SPAN_CVR002_OUTPUT.FLEX_VALUE,CASE WHEN SPAN_OUTPUT.ENABLED_FLAG = 'Y' THEN 0 ELSE 1 END, 1) DELETED,
-    NVL2(SPAN_CVR002_OUTPUT.FLEX_VALUE,SPAN_CVR002_OUTPUT.DESCRIPTION,SAKTI_OUTPUT.DESKRIPSI) DESKRIPSI,
-    NVL2(SPAN_CVR002_OUTPUT.FLEX_VALUE,SPAN_CVR002_OUTPUT.ATTRIBUTE1,SAKTI_OUTPUT.KODE_KEGIATAN) KODE_KEGIATAN,
-    NVL2(SPAN_CVR002_OUTPUT.FLEX_VALUE,SPAN_CVR002_OUTPUT.ATTRIBUTE4,SAKTI_OUTPUT.SATUAN) SATUAN
--- TRANSLATE -->
-  FROM (
-    SELECT SPAN_OUTPUT.FLEX_VALUE,
-      SPAN_OUTPUT.ENABLED_FLAG,
-      SPAN_OUTPUT.DESCRIPTION,
-      SPAN_OUTPUT.ATTRIBUTE1, -- KEGIATAN
-      SPAN_OUTPUT.ATTRIBUTE4 -- SATUAN
-    FROM (
-      SELECT SUBSTR(CONCATENATED_SEGMENTS_LOW,12,7) SPAN_OUTPUT_FLEX_VALUE
-      FROM APPS.FND_FLEX_VALIDATION_RULE_LINES@SPAN_ST
-      WHERE FLEX_VALIDATION_RULE_NAME                 = 'CVR002'
-      AND INCLUDE_EXCLUDE_INDICATOR                   = 'I'
-      AND ENABLED_FLAG                                = 'Y'
-      AND SUBSTR(CONCATENATED_SEGMENTS_LOW,7,2) NOT  IN ('ZZ','00') -- SPAN_DFF_ESELON_ONE
-      AND SUBSTR(CONCATENATED_SEGMENTS_LOW,9,2) NOT  IN ('ZZ','00') -- SPAN_DFF_PROGRAM
-      AND SUBSTR(CONCATENATED_SEGMENTS_LOW,12,4) NOT IN ('ZZZZ', '0000') -- SPAN_DFF_GIAT
-      AND SUBSTR(CONCATENATED_SEGMENTS_LOW,16,3) NOT IN ('ZZZ', '000') -- SPAN_DFF_OUTPUT
-      ) SPAN_CVR002
-    LEFT JOIN (
-      SELECT FFV.FLEX_VALUE,
-        FFV.ENABLED_FLAG,
-        FFVT.DESCRIPTION,
-        FFV.ATTRIBUTE1, -- KEGIATAN
-        FFV.ATTRIBUTE4 -- SATUAN
-      FROM FND_FLEX_VALUES@SPAN_ST FFV
-  	  LEFT JOIN FND_FLEX_VALUE_SETS@SPAN_ST FFVS
-  	    ON FFV.FLEX_VALUE_SET_ID = FFVS.FLEX_VALUE_SET_ID
-        LEFT JOIN FND_FLEX_VALUES_TL@SPAN_ST FFVT
-          ON FFV.FLEX_VALUE_ID          = FFVT.FLEX_VALUE_ID
-      WHERE FFVS.FLEX_VALUE_SET_NAME = 'SPAN_OUTPUT'
-        AND FFV.SUMMARY_FLAG         = 'N'
-        AND FFVT.LANGUAGE            = 'IN'
-      ) SPAN_OUTPUT ON SPAN_CVR002.SPAN_OUTPUT_FLEX_VALUE = SPAN_OUTPUT.FLEX_VALUE
-    WHERE SPAN_OUTPUT.ENABLED_FLAG IS NOT NULL
-  ) SPAN_CVR002_OUTPUT
-  FULL OUTER JOIN ADM_R_OUTPUT SAKTI_OUTPUT
-  	ON SAKTI_OUTPUT.KODE = SPAN_CVR002_OUTPUT.FLEX_VALUE
-) SPAN_SAKTI ON (SPAN_SAKTI.FLEX_VALUE = SAKTI.KODE)
-
-WHEN MATCHED THEN
+MERGE INTO ADM_R_OUTPUT arb USING
+(SELECT NVL(ffv.flex_value,arb.KODE)flex_value ,
+  nvl2(ffv.flex_value,ffv.enabled_flag,1) enabled_flag ,
+  nvl2(ffv.flex_value,ffv.description,arb.deskripsi) description,
+  nvl2(ffv.flex_value,ffv.attribute4,arb.satuan) attribute4
+FROM
+  (SELECT DATA_1.flex_value,
+  DATA_2.enabled_flag,
+  DATA_2.description,
+  DATA_2.attribute4
+FROM
+  (SELECT SUBSTR(CONCATENATED_SEGMENTS_LOW,4,3)
+    || '.'
+    || SUBSTR(CONCATENATED_SEGMENTS_LOW,7,2)
+    || '.'
+    || SUBSTR(CONCATENATED_SEGMENTS_LOW,9,3)
+    || SUBSTR(CONCATENATED_SEGMENTS_LOW,12,4)
+    || '.'
+    || SUBSTR(CONCATENATED_SEGMENTS_LOW,16,3) flex_value,
+    SUBSTR(CONCATENATED_SEGMENTS_LOW,12,7) OUTPUT
+  FROM APPS.FND_FLEX_VALIDATION_RULE_LINES@SPAN_ST
+  WHERE FLEX_VALIDATION_RULE_NAME                 ='CVR002'
+  AND INCLUDE_EXCLUDE_INDICATOR                   ='I'
+  AND ENABLED_FLAG                                = 'Y'
+  AND SUBSTR(CONCATENATED_SEGMENTS_LOW,7,2) NOT  IN ('ZZ','00')
+  AND SUBSTR(CONCATENATED_SEGMENTS_LOW,9,2) NOT  IN ('ZZ','00')
+  AND SUBSTR(CONCATENATED_SEGMENTS_LOW,12,4) NOT IN ('ZZZZ', '0000')
+  AND SUBSTR(CONCATENATED_SEGMENTS_LOW,16,3) NOT IN ('ZZZ', '000')
+  ) DATA_1
+LEFT JOIN
+  (SELECT ffv.flex_value,
+    CASE
+      WHEN ffv.enabled_flag='Y'
+      THEN 0
+      ELSE 1
+    END AS enabled_flag ,
+    ffvt.description,
+    ffv.attribute4
+  FROM fnd_flex_values@SPAN_ST ffv
+  LEFT JOIN fnd_flex_value_sets@SPAN_ST ffvs
+  ON ffv.flex_value_set_id = ffvs.flex_value_set_id
+  LEFT JOIN fnd_flex_values_tl@SPAN_ST ffvt
+  ON ffv.FLEX_VALUE_ID          = ffvt.FLEX_VALUE_ID
+  WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_OUTPUT'
+  AND ffv.summary_flag          ='N'
+  AND ffvt.language             ='IN'
+  ) DATA_2 ON DATA_1.OUTPUT     = DATA_2.flex_value
+  WHERE DATA_2.enabled_flag IS NOT NULL
+  AND DATA_2.enabled_flag = '0'
+  ) ffv
+FULL OUTER JOIN ADM_R_OUTPUT arb
+ON arb.kode              =ffv.flex_value
+) src ON (src.flex_value = arb.kode)
+WHEN matched THEN
   UPDATE
-  SET SAKTI.DESKRIPSI      = SPAN_SAKTI.DESKRIPSI,
-    SAKTI.DELETED          = SPAN_SAKTI.DELETED,
-    SAKTI.SATUAN           = SPAN_SAKTI.SATUAN,
-    SAKTI.MODIFIED_DATE    = SYSDATE 
-WHEN NOT MATCHED THEN
+  SET arb.deskripsi      =src.description,
+    arb.deleted          =src.enabled_flag,
+    arb.satuan           =src.attribute4,
+    arb.modified_date    = sysdate WHEN NOT matched THEN
   INSERT
     (
-      KODE,
-      DESKRIPSI,
-      DELETED,
-      ACTIVE_DATE,
-      INACTIVE_DATE,
-      MODIFIED_BY,
-      MODIFIED_DATE,
-      VERSION,
-      ACTIVE,
-      SATUAN,
-      KODE_KEGIATAN
+      kode,
+      deskripsi,
+      deleted,
+      active_date,
+      inactive_date,
+      modified_by,
+      modified_date,
+      version,
+      active,
+      satuan,
+      kode_kegiatan
     )
     VALUES
     (
-      SPAN_SAKTI.KODE,
-      SPAN_SAKTI.DESKRIPSI,
-      SPAN_SAKTI.DELETED,
-      SYSDATE, -- ACTIVE_DATE
-      SYSDATE+10000, -- INACTIVE_DATE
-      'SYNC', -- MODIFIED_BY
-      SYSDATE, -- MODIFIED_DATE
-      0, -- VERSION
-      1, -- ACTIVE
-      SPAN_SAKTI.SATUAN,
-      SPAN_SAKTI.KODE_KEGIATAN
-); 
+      src.flex_value,
+      src.description,
+      src.enabled_flag,
+      sysdate,
+      sysdate+10000,
+      'sync',
+      sysdate,
+      0,
+      1,
+      src.attribute4,
+      substr(src.flex_value,1,14)
+    ); 
