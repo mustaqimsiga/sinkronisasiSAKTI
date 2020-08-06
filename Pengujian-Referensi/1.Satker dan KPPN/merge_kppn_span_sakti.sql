@@ -1,4 +1,4 @@
-merge INTO sakti_ut.ADM_R_KPPN arb USING
+merge INTO sakti_app.ADM_R_KPPN arb USING
 (SELECT NVL(ffv.flex_value,arb.KODE)flex_value ,
   nvl2(ffv.flex_value,ffv.enabled_flag,1) enabled_flag ,
   nvl2(ffv.flex_value,ffv.description,arb.deskripsi) description
@@ -19,14 +19,15 @@ FROM
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
   ) ffv
-FULL OUTER JOIN sakti_ut.ADM_R_KPPN arb
+FULL OUTER JOIN sakti_app.ADM_R_KPPN arb
 ON arb.kode              =ffv.flex_value
 ) src ON (src.flex_value = arb.kode)
-WHEN matched THEN
-  UPDATE
-  SET arb.deskripsi   =src.description,
-    arb.deleted       =src.enabled_flag,
-    arb.modified_date = sysdate WHEN NOT matched THEN
+--WHEN matched THEN
+--  UPDATE
+--  SET arb.deskripsi   =src.description,
+--    arb.deleted       =src.enabled_flag,
+--    arb.modified_date = sysdate
+    WHEN NOT matched THEN
   INSERT
     (
       kode,
@@ -52,5 +53,5 @@ WHEN matched THEN
       0,
       '99', -- dummy
       1
-    ); 
+    );
     commit;
