@@ -1,4 +1,4 @@
-merge INTO sakti_ut.ADM_R_PROGRAM arb USING
+merge INTO sakti_app.ADM_R_PROGRAM arb USING
 (SELECT NVL(ffv.flex_value,arb.KODE)flex_value ,
   nvl2(ffv.flex_value,ffv.enabled_flag,1) enabled_flag ,
   nvl2(ffv.flex_value,ffv.description,arb.deskripsi) description,
@@ -22,7 +22,7 @@ FROM
   AND ffvt.language             ='IN'
   and substr(ffv.flex_value,4,2) not in ('ZZ','00') --Filter unit 'ZZ' dan '00' karena ada constraint dengan ADM_R_KEMENTERIAN
   ) ffv
-FULL OUTER JOIN sakti_ut.ADM_R_PROGRAM arb
+FULL OUTER JOIN sakti_app.ADM_R_PROGRAM arb
 ON arb.kode              =ffv.flex_value
 ) src ON (src.flex_value = arb.kode)
 WHEN matched THEN
@@ -30,7 +30,8 @@ WHEN matched THEN
   SET arb.deskripsi      =src.description,
     arb.deleted          =src.enabled_flag,
     arb.unit_kode        =src.kode_unit,
-    arb.modified_date    = sysdate WHEN NOT matched THEN
+    arb.modified_date    = sysdate
+    WHEN NOT matched THEN
   INSERT
     (
       kode,
@@ -56,5 +57,5 @@ WHEN matched THEN
       sysdate,
       0,
       1
-    ); 
+    );
     commit;
