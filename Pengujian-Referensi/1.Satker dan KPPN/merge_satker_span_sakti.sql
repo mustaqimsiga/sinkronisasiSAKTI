@@ -1,4 +1,4 @@
-merge INTO sakti_ut.ADM_R_SATKER arb USING
+merge INTO sakti_app.ADM_R_SATKER arb USING
 (SELECT NVL(ffv.flex_value,arb.KODE)flex_value ,
   nvl2(ffv.flex_value,ffv.enabled_flag,1) enabled_flag ,
   nvl2(ffv.flex_value,ffv.description,arb.deskripsi) description,
@@ -27,17 +27,18 @@ FROM
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
   ) ffv
-FULL OUTER JOIN sakti_ut.ADM_R_SATKER arb
+FULL OUTER JOIN sakti_app.ADM_R_SATKER arb
 ON arb.kode              =ffv.flex_value
 ) src ON (src.flex_value = arb.kode)
-WHEN matched THEN
-  UPDATE
-  SET arb.deskripsi      =src.description,
-    arb.deleted          =src.enabled_flag,
-    arb.kode_unit        =src.kode_unit,
-    arb.kode_kppn        =src.kode_kppn,
-    arb.kode_jenis_satker=src.kode_jenis_satker,
-    arb.modified_date    = sysdate WHEN NOT matched THEN
+--WHEN matched THEN
+  --UPDATE
+  --SET arb.deskripsi      =src.description,
+    --arb.deleted          =src.enabled_flag,
+    --arb.kode_unit        =src.kode_unit,
+    --arb.kode_kppn        =src.kode_kppn,
+    --arb.kode_jenis_satker=src.kode_jenis_satker,
+    --arb.modified_date    = sysdate
+    WHEN NOT matched THEN
   INSERT
     (
       kode,
@@ -53,7 +54,8 @@ WHEN matched THEN
       modified_by,
       modified_date,
       version,
-      active
+      active,
+      aktif_1
     )
     VALUES
     (
@@ -65,10 +67,11 @@ WHEN matched THEN
       src.kode_jenis_satker,
       sysdate,
       sysdate+10000,
-      '01.99', -- dummy di adm_r_lokasi
-      '4',
+      '01.51', -- dummy di adm_r_lokasi
+      '2',
       'sync',
       sysdate,
       0,
+      1,
       1
-    ); 
+    );
