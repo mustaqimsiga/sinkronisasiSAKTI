@@ -1,4 +1,4 @@
-MERGE INTO ADM_R_OUTPUT arb USING
+MERGE INTO sakti_app.ADM_R_OUTPUT arb USING
 (SELECT NVL(ffv.flex_value,arb.KODE)flex_value ,
   nvl2(ffv.flex_value,ffv.enabled_flag,1) enabled_flag ,
   nvl2(ffv.flex_value,ffv.description,arb.deskripsi) description,
@@ -48,7 +48,7 @@ LEFT JOIN
   WHERE DATA_2.enabled_flag IS NOT NULL
   AND DATA_2.enabled_flag = '0'
   ) ffv
-FULL OUTER JOIN ADM_R_OUTPUT arb
+FULL OUTER JOIN sakti_app.ADM_R_OUTPUT arb
 ON arb.kode              =ffv.flex_value
 ) src ON (src.flex_value = arb.kode)
 WHEN matched THEN
@@ -56,7 +56,8 @@ WHEN matched THEN
   SET arb.deskripsi      =src.description,
     arb.deleted          =src.enabled_flag,
     arb.satuan           =src.attribute4,
-    arb.modified_date    = sysdate WHEN NOT matched THEN
+    arb.modified_date    = sysdate
+    WHEN NOT matched THEN
   INSERT
     (
       kode,
@@ -84,4 +85,4 @@ WHEN matched THEN
       1,
       src.attribute4,
       substr(src.flex_value,1,14)
-    ); 
+    );
