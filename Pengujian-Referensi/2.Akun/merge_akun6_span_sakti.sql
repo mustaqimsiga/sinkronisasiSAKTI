@@ -33,9 +33,7 @@ FROM
       --AND ffv.summary_flag          ='N'
     AND ffvt.language ='IN'
     AND ffv.flex_value NOT LIKE '%0'
-    AND (ffv.flex_value NOT LIKE 'B%'
-    AND ffv.flex_value NOT LIKE 'C%'
-    AND ffv.flex_value NOT LIKE 'T%' )
+    AND REGEXP_LIKE(FFV.FLEX_VALUE , '^[0-9]{6}$')
     ) ffvx
   LEFT JOIN apps.fnd_flex_value_norm_hierarchy@SPAN_ST h
   ON ffvx.flex_value         = h.parent_flex_value
