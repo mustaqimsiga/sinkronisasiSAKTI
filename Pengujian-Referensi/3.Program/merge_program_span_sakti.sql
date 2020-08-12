@@ -20,7 +20,8 @@ FROM
   WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_PROGRAM'
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
-  and substr(ffv.flex_value,4,2) not in ('ZZ','00') --Filter unit 'ZZ' dan '00' karena ada constraint dengan ADM_R_KEMENTERIAN
+  and substr(ffv.flex_value,4,2) not in ('00') --Filter unit 'ZZ' dan '00' karena ada constraint dengan ADM_R_KEMENTERIAN
+  AND REGEXP_LIKE(FFV.FLEX_VALUE , '^[0-9]{7}$')
   ) ffv
 FULL OUTER JOIN sakti_app.ADM_R_PROGRAM arb
 ON arb.kode              =ffv.flex_value
