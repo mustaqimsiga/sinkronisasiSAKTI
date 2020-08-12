@@ -20,7 +20,7 @@ FROM
   AND ffvt.language             ='IN'
   AND substr(ffv.flex_value,5,2) LIKE '%00'
   AND substr(ffv.flex_value,4,1) != '0'
-  AND (ffv.flex_value NOT LIKE 'B%' AND ffv.flex_value NOT LIKE 'C%' AND ffv.flex_value NOT LIKE 'T%')
+  AND REGEXP_LIKE(FFV.FLEX_VALUE , '^[0-9]{6}$')
   ) ffv
 FULL OUTER JOIN sakti_app.ADM_R_BKPK arb
 ON arb.kode              =ffv.flex_value
