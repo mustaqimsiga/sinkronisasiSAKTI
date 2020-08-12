@@ -18,6 +18,7 @@ FROM
   WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_KPPN'
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
+  AND REGEXP_LIKE(ffv.FLEX_VALUE , '^[0-9]{3}$')
   ) ffv
 FULL OUTER JOIN sakti_app.ADM_R_KPPN arb
 ON arb.kode              =ffv.flex_value
