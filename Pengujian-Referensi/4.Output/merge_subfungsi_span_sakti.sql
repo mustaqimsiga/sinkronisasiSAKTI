@@ -20,6 +20,7 @@ FROM
   WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_DFF_SUBFUNGSI'
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
+  AND REGEXP_LIKE(FFV.FLEX_VALUE , '^[0-9]{4}$')
   ) ffv
 FULL OUTER JOIN sakti_app.ADM_R_SUB_FUNGSI arb
 ON arb.kode              =ffv.flex_value
