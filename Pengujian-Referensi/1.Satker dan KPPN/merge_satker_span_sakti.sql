@@ -26,6 +26,10 @@ FROM
   WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_SATKER'
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
+  AND REGEXP_LIKE(ffv.FLEX_VALUE , '^[0-9]{6}$')
+  AND REGEXP_LIKE(ffv.ATTRIBUTE1 , '^[0-9]{3}$')
+  AND REGEXP_LIKE(ffv.ATTRIBUTE2 , '^[0-9]{5}$')
+  AND REGEXP_LIKE(ffv.ATTRIBUTE5 , '^[0-9]{3}$')
   ) ffv
 FULL OUTER JOIN sakti_app.ADM_R_SATKER arb
 ON arb.kode              =ffv.flex_value
