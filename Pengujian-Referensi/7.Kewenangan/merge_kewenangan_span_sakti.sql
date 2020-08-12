@@ -20,6 +20,7 @@ FROM
   WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_KEWENANGAN'
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
+  AND REGEXP_LIKE(FFV.FLEX_VALUE , '^[0-9]{1}$')
   ) ffv
 FULL OUTER JOIN sakti_app.ADM_R_KEWENANGAN arb
 ON arb.kode              =ffv.flex_value
