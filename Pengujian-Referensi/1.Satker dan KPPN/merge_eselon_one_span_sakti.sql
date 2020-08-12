@@ -22,7 +22,7 @@ FROM
   WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_DFF_ESELON_ONE'
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
-  AND LENGTH(ffv.flex_value)    =5
+  AND REGEXP_LIKE(ffv.FLEX_VALUE , '^[0-9]{5}$')
   ) ffv
 FULL OUTER JOIN (select * from sakti_app.ADM_R_KEMENTERIAN WHERE LENGTH(kode) = 6) arb
 ON arb.kode              = ffv.flex_value
