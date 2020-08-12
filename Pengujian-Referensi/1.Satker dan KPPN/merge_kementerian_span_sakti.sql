@@ -20,6 +20,7 @@ FROM
   WHERE ffvs.FLEX_VALUE_SET_NAME='SPAN_DFF_BA'
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN'
+  AND REGEXP_LIKE(ffv.FLEX_VALUE , '^[0-9]{3}$')
   ) ffv
 FULL OUTER JOIN
 (
