@@ -21,6 +21,7 @@ FROM
   AND ffv.summary_flag          ='N'
   AND ffvt.language             ='IN' 
   and substr(ffv.flex_value,1,2) <= '39'
+  AND REGEXP_LIKE(FFV.FLEX_VALUE , '^[0-9]{4}$')
   ) ffv
 FULL OUTER JOIN sakti_ut.ADM_R_LOKASI arb
 ON arb.kode              =ffv.flex_value
